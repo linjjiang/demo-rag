@@ -1,0 +1,23 @@
+[project]
+name = "rag-streamlit-qna"
+version = "0.1.0"
+description = "Minimal RAG question answering experience powered by Streamlit, LangChain, and FAISS."
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["classifiers"]
+
+[project.urls]
+Homepage = "https://example.com/rag-streamlit-qna"
+
+[project.dependencies]
+streamlit = ">=1.30"
+langchain = ">=0.2.10"
+faiss-cpu = ">=1.7.4"
+sentence-transformers = ">=2.2.2"
+pypdf = ">=3.14.0"
+python-dotenv = ">=1.0.0"
+typing-extensions = ">=4.7.1"
+
+[tool.setuptools.packages.find]
+where = ["."]
+

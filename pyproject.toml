@@ -3,21 +3,34 @@ name = "rag-streamlit-qna"
 version = "0.1.0"
 description = "Minimal RAG question answering experience powered by Streamlit, LangChain, and FAISS."
 readme = "README.md"
-requires-python = ">=3.10"
-dynamic = ["classifiers"]
+requires-python = ">=3.9"
+# dynamic = ["classifiers"]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+dependencies = [
+    "streamlit>=1.30",
+    "langchain>=0.2.10",
+    "langchain-community>=0.2.10",
+    "langchain-openai>=0.1.0",
+    "faiss-cpu>=1.7.4",
+    "sentence-transformers>=2.2.2",
+    "pypdf>=3.14.0",
+    "python-dotenv>=1.0.0",
+    "typing-extensions>=4.7.1",
+]
 
 [project.urls]
 Homepage = "https://example.com/rag-streamlit-qna"
 
-[project.dependencies]
-streamlit = ">=1.30"
-langchain = ">=0.2.10"
-faiss-cpu = ">=1.7.4"
-sentence-transformers = ">=2.2.2"
-pypdf = ">=3.14.0"
-python-dotenv = ">=1.0.0"
-typing-extensions = ">=4.7.1"
-
 [tool.setuptools.packages.find]
 where = ["."]
+
+[build-system]
+requires = ["setuptools>=65.5.0", "wheel"]
+build-backend = "setuptools.build_meta"
 

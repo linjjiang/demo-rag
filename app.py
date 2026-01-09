@@ -2,16 +2,20 @@ import os
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, TYPE_CHECKING
 
 import streamlit as st
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import PyPDFLoader
-from langchain.embeddings import SentenceTransformerEmbeddings
-from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain.schema import Document
+from langchain_openai import ChatOpenAI
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.embeddings import SentenceTransformerEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain.schema import Document
+
+if TYPE_CHECKING:
+    from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 
 MODEL_NAME = "all-MiniLM-L6-v2"
@@ -24,7 +28,7 @@ def create_workspace() -> Path:
     return root / uuid.uuid4().hex
 
 
-def save_uploaded_files(files: Iterable[st.uploaded_file_manager.UploadedFile], destination: Path) -> List[Path]:
+def save_uploaded_files(files: Iterable["UploadedFile"], destination: Path) -> List[Path]:
     destination.mkdir(parents=True, exist_ok=True)
     saved_paths: List[Path] = []
     for upload in files:
@@ -72,6 +76,17 @@ def create_qa_chain(vector_store: FAISS) -> RetrievalQA:
         retriever=retriever,
         return_source_documents=True,
     )
+
+
+def fallback_search(vector_store: FAISS, query: str) -> dict:
+    """Return top docs without calling an external LLM."""
+    docs = vector_store.similarity_search(query, k=4)
+    lines = ["OpenAI key not set; returning top-matching snippets:"]
+    for idx, doc in enumerate(docs, start=1):
+        snippet = doc.page_content.strip().replace("\n", " ")[:300]
+        source = doc.metadata.get("source", f"document-{idx}")
+        lines.append(f"{idx}. {source}: {snippet}{'...' if len(snippet) == 300 else ''}")
+    return {"result": "\n".join(lines), "source_documents": docs}
 
 
 def main() -> None:
@@ -171,10 +186,14 @@ def main() -> None:
             st.warning("Enter a question before submitting.")
         else:
             try:
-                qa_chain = create_qa_chain(st.session_state.vector_store)
-                with st.spinner("Searching the index and generating an answer…"):
-                    result = qa_chain({"query": query})
-                    st.session_state.last_result = result
+                if os.getenv("OPENAI_API_KEY"):
+                    qa_chain = create_qa_chain(st.session_state.vector_store)
+                    with st.spinner("Searching the index and generating an answer…"):
+                        result = qa_chain({"query": query})
+                        st.session_state.last_result = result
+                else:
+                    with st.spinner("No LLM key detected; running retrieval-only fallback…"):
+                        st.session_state.last_result = fallback_search(st.session_state.vector_store, query)
             except Exception as exc:
                 st.error(f"LLM inference failed: {exc}")
 
@@ -192,7 +211,9 @@ def main() -> None:
                 st.caption(f"Metadata: {metadata}")
 
     if not os.getenv("OPENAI_API_KEY"):
-        st.warning("Set the `OPENAI_API_KEY` environment variable so the ChatOpenAI client can run.")
+        st.warning(
+            "OPENAI_API_KEY not set. Using retrieval-only fallback that returns the top snippets without generation."
+        )
 
 
 if __name__ == "__main__":

@@ -11,17 +11,28 @@ Streamlit drives the interface, LangChain + Sentence Transformers handle chunkin
 
 ## Quick Start
 
+First, create an env:
+python3 -m venv venv
+python -m pip install --upgrade pip setuptools wheel
+
 1. **Install dependencies**:
 
    ```bash
    pip install -e .
    ```
 
-2. **Set your OpenAI credentials** (needed for `ChatOpenAI`):
+2. **Option A: Use OpenAI for generation** (recommended):
 
    ```bash
    export OPENAI_API_KEY=sk-...
    ```
+
+   The app will call `ChatOpenAI` to summarize retrieved chunks.
+
+   **Option B: No OpenAI key**
+
+   - Skip setting the key.  
+   - The app falls back to retrieval-only mode: it returns the top matching snippets instead of an LLM-generated answer.
 
 3. **Run the Streamlit app**:
 
@@ -36,6 +47,11 @@ Streamlit drives the interface, LangChain + Sentence Transformers handle chunkin
    - Ask a question in the text box and hit **Search & Generate**.
    - Review the generated answer plus the referenced snippets from your documents.
 
+5. **Delete local cache from you computer**
+   ```bash
+   rm -rf /var/folders/*/*/*/rag_streamlit_workspace
+   ```
+   
 ## Features implemented
 
 | Step | Behavior |
